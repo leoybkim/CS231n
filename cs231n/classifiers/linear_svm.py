@@ -35,14 +35,19 @@ def svm_loss_naive(W, X, y, reg):
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
         loss += margin
+        dW[:,j] += X[i].T    # gradient for incorrect class
+        dW[:,y[i]] -= X[i].T # gradient for corrrect class
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
+  # Average gradient
+  dW /= num_train
 
   # Add regularization to the loss.
-  loss += reg * np.sum(W * W)
-
+  loss += 0.5 * reg * np.sum(W * W)
+  # Add regularization to the gradient
+  dW += reg * W
   #############################################################################
   # TODO:                                                                     #
   # Compute the gradient of the loss function and store it dW.                #
@@ -70,7 +75,19 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  num_train = X.shape[0]
+  num_classes = W.shape[1]
+  scores = X.dot(W)
+
+  correct_class_scores = scores[np.arange(num_train), y]
+
+
+  margins = np.maximum(0, scores - correct_class_scores[:,np.newaxis] + 1) # calculate margins all at once
+  margins[np.arange(num_train), y] = 0 # exclude correct class
+
+  # final SVM loss with regularization term
+  loss = np.sum(margins)/num_train + (0.5 * reg * np.sum(W * W))
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -85,7 +102,15 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+
+
+  X_mat = np.zeros(margins.shape)
+  X_mat[margins > 0] = 1 # Mask the matrix where the margin is greater than zero
+  X_mat[np.arange(num_train), y] = 0
+  X_mat[np.arange(num_train), y] = -np.sum(X_mat, axis=1)
+
+  # Average the calculated gradient and add the regularization term
+  dW = (X.T).dot(X_mat)/num_train + reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
