@@ -132,8 +132,8 @@ class TwoLayerNet(object):
     grads['b1'] = np.sum(dReLU, axis=0)
 
     # regularization
-    grads['W2'] += reg * W2
-    grads['W1'] += reg * W1
+    grads['W2'] += 2 * reg * W2
+    grads['W1'] += 2 * reg * W1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
